@@ -1,0 +1,54 @@
+#!/bin/sh
+
+case "$1" in
+
+    start)
+        echo "Loading hello module"
+
+        modprobe hello || exit 1
+
+        echo "Loading faulty module"
+
+        FAULTY_KO=$(find /lib/modules/$(uname -r) \
+            -type f -name 'faulty.ko' | head -n 1)
+
+        if [ -z "$FAULTY_KO" ]; then
+            echo "Could not locate faulty.ko"
+            exit 1
+        fi
+
+        insmod "$FAULTY_KO" || exit 1
+
+        major=$(awk '$2=="faulty" {print $1}' /proc/devices)
+
+        if [ -n "$major" ]; then
+            rm -f /dev/faulty
+            mknod /dev/faulty c ${major} 0
+            chmod 664 /dev/faulty
+        fi
+
+        echo "Miscellaneous modules loaded"
+        ;;
+
+    stop)
+        echo "Unloading miscellaneous modules"
+
+        rm -f /dev/faulty
+
+        busybox rmmod faulty 2>/dev/null || true
+        rmmod hello 2>/dev/null || true
+        ;;
+
+    restart)
+        "$0" stop
+        "$0" start
+        ;;
+
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+
+esac
+
+exit 0
