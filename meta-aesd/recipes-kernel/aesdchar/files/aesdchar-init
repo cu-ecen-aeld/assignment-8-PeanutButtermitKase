@@ -1,0 +1,46 @@
+#!/bin/sh
+
+MODULE="aesdchar"
+DEVICE="/dev/aesdchar"
+
+case "$1" in
+    start)
+        echo "Loading aesdchar module"
+
+        modprobe ${MODULE} || exit 1
+
+        major=$(awk '$2=="aesdchar" {print $1}' /proc/devices)
+
+        if [ -z "$major" ]; then
+            echo "Unable to determine aesdchar major number"
+            exit 1
+        fi
+
+        rm -f ${DEVICE}
+
+        mknod ${DEVICE} c ${major} 0
+        chmod 666 ${DEVICE}
+
+        echo "aesdchar module loaded"
+        ;;
+
+    stop)
+        echo "Unloading aesdchar module"
+
+        rm -f ${DEVICE}
+
+        rmmod ${MODULE} 2>/dev/null || true
+        ;;
+
+    restart)
+        "$0" stop
+        "$0" start
+        ;;
+
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac
+
+exit 0

@@ -5,7 +5,7 @@ SRC_URI = "git://git@github.com/cu-ecen-aeld/assignments-3-and-later-PeanutButte
 
 PV = "1.0+git${SRCPV}"
 
-SRCREV = "f1c9cd9e4cd4af4c28359c1f5508b4c6161a67ec"
+SRCREV = "faecfaf49cb11c668fdd20d81314f4b793becace"
 
 S = "${WORKDIR}/git/server"
 
@@ -24,7 +24,8 @@ do_configure () {
 do_compile () {
     oe_runmake \
         CC="${CC}" \
-        CFLAGS="${CFLAGS} ${LDFLAGS} -pthread"
+        USE_AESD_CHAR_DEVICE=1 \
+        CFLAGS="${CFLAGS} ${LDFLAGS} -pthread -DUSE_AESD_CHAR_DEVICE=1"
 }
 
 do_install () {
